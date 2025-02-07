@@ -4,14 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cuaderno del Profesorado</title>
-    <link rel="manifest" href="manifest.json">
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(registration => console.log('Service Worker registrado:', registration))
-                .catch(error => console.error('Error registrando el Service Worker:', error));
-        }
-    </script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1, h2 { text-align: center; }
@@ -35,6 +27,7 @@
         <button onclick="ordenarPorNombre()">Ordenar por Nombre (A-Z)</button>
         <button onclick="agregarColumnaAsistencia()">Añadir columna de asistencia</button>
         <button onclick="agregarColumnaNota()">Añadir columna de calificaciones</button>
+        <button onclick="guardarDatosLocalmente()">Guardar Cambios</button>
 
         <h3>Mostrar/Ocultar Columnas</h3>
         <div id="toggleColumns">
@@ -84,17 +77,17 @@
             }
         }
 
-        function agregarFila(nombre) {
-            let table = document.getElementById("listaAlumnos");
-            let row = table.insertRow();
+        function agregarFila(nombre, observacion = "Sin observación") {
+            const table = document.getElementById("listaAlumnos");
+            const row = table.insertRow();
             row.innerHTML = `
                 <td>${nombre}</td>
                 <td data-column="Observación">
                     <select>
-                        <option value="Sin observación">Sin observación</option>
-                        <option value="Participa activamente">Participa activamente</option>
-                        <option value="Necesita apoyo">Necesita apoyo</option>
-                        <option value="Ausente frecuente">Ausente frecuente</option>
+                        <option value="Sin observación" ${observacion === "Sin observación" ? "selected" : ""}>Sin observación</option>
+                        <option value="Participa activamente" ${observacion === "Participa activamente" ? "selected" : ""}>Participa activamente</option>
+                        <option value="Necesita apoyo" ${observacion === "Necesita apoyo" ? "selected" : ""}>Necesita apoyo</option>
+                        <option value="Ausente frecuente" ${observacion === "Ausente frecuente" ? "selected" : ""}>Ausente frecuente</option>
                     </select>
                 </td>
                 ${Array(asistenciaCount).fill().map((_, index) => `
@@ -219,6 +212,29 @@
                 el.classList.toggle("hide");
             });
         }
+
+        // Guardar y cargar datos usando localStorage
+        function guardarDatosLocalmente() {
+            const alumnos = [];
+            document.querySelectorAll("#listaAlumnos tr").forEach(row => {
+                const nombre = row.cells[0].textContent;
+                const observacion = row.cells[1].querySelector("select").value;
+                alumnos.push({ nombre, observacion });
+            });
+            localStorage.setItem("alumnos", JSON.stringify(alumnos));
+            alert("Datos guardados localmente");
+        }
+
+        function cargarDatosLocalmente() {
+            const datosGuardados = localStorage.getItem("alumnos");
+            if (datosGuardados) {
+                const alumnos = JSON.parse(datosGuardados);
+                alumnos.forEach(alumno => agregarFila(alumno.nombre, alumno.observacion));
+            }
+        }
+
+        // Cargar datos al iniciar
+        cargarDatosLocalmente();
     </script>
 </body>
 </html>
